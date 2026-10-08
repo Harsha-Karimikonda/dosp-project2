@@ -1,7 +1,8 @@
 # COP5612 – Fall 2026: Project 2 (Gossip Simulator)
 
 ## Team Members
-* **Harsha Karimikonda** (harshakarimikonda@ufl.edu)
+* **Harsha Karimikonda** (hkarimkonda@ufl.edu, UFID: 50966091)
+* **Venkata Eswar Gollepalli** (ve.gollepalli@ufl.edu, UFID: 24690032)
 
 ---
 

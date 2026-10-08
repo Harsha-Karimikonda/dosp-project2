@@ -1,6 +1,9 @@
 # COP5612 (Fall 2026) – Project 2: Gossip & Push-Sum Simulator
 
-**Author / Group Member:** Harsha Karimikonda (hkarimkonda@ufl.edu)  
+## Team Members
+* **Harsha Karimikonda** (hkarimkonda@ufl.edu, UFID: 50966091)
+* **Venkata Eswar Gollepalli** (ve.gollepalli@ufl.edu, UFID: 24690032)
+
 **Instructor:** Prof. Alin Dobra  
 
 ---
