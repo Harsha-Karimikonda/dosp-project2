@@ -8,7 +8,7 @@
 ## What is Working (Bonus Features)
 * **Crash-Stop Node Failure Model (`node_crash`)**:
   * Configurable failure probability $P_{fail} \in [0.0, 1.0]$.
-  * Nodes crash independently at startup or dynamically. Crashed actors terminate execution and cease receiving/sending messages.
+  * Nodes crash independently during startup. Crashed actors terminate execution and cease receiving/sending messages.
   * Master tracks the number of alive/dead actors and monitors surviving node coverage.
 * **Lossy Connection Model (`connection_loss`)**:
   * Simulates unreliable network links with message drop probability $P_{loss} \in [0.0, 1.0]$.
@@ -31,7 +31,7 @@ make
 erlc -o ebin src/*.erl
 ```
 
-### Running on Linux / macOS
+### Running the Bonus Simulator
 ```bash
 # Defaults to 10% node crash:
 ./project2_bonus 1000 full gossip
@@ -41,10 +41,4 @@ erlc -o ebin src/*.erl
 
 # Test connection loss (e.g. 15% message drop):
 ./project2_bonus 1000 imp2D gossip connection_loss 0.15
-```
-
-### Running on Windows
-```cmd
-project2_bonus.bat 1000 full gossip node_crash 0.2
-project2_bonus.bat 1000 imp2D gossip connection_loss 0.15
 ```

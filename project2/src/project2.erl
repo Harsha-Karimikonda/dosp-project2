@@ -122,7 +122,8 @@ start_simulation(N, Topology, Algorithm) ->
     persistent_term:erase(workers),
     Result.
 
-%% Wait for gossip convergence: when all N nodes have heard the rumor
+%% Gossip converges when every node has heard the rumor at least once.
+%% Each worker independently stops transmitting after its tenth receipt.
 wait_gossip_convergence(Total, HeardCount, TerminatedCount) ->
     receive
         {node_heard, _Id} ->
@@ -136,7 +137,7 @@ wait_gossip_convergence(Total, HeardCount, TerminatedCount) ->
         {node_terminated, _Id} ->
             wait_gossip_convergence(Total, HeardCount, TerminatedCount + 1)
     after 180000 -> %% 3-minute timeout safety
-        {timeout, {heard, HeardCount, total, Total}}
+        {timeout, {heard, HeardCount, terminated, TerminatedCount, total, Total}}
     end.
 
 %% Wait for push-sum convergence: when all N nodes achieve ratio stability

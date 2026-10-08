@@ -12,7 +12,7 @@ start_gossip(Id, Topology, NumNodes, MasterPid, FailConfig) ->
         if
             IsCrashed ->
                 MasterPid ! {node_failed, Id},
-                crashed_loop();
+                exit(crashed);
             true ->
                 receive
                     {init_neighbors, Neighbors} ->
@@ -20,12 +20,6 @@ start_gossip(Id, Topology, NumNodes, MasterPid, FailConfig) ->
                 end
         end
     end).
-
-crashed_loop() ->
-    receive
-        stop -> exit(normal);
-        _ -> crashed_loop()
-    end.
 
 gossip_loop(Id, Topology, NumNodes, Neighbors, RumorCount, MasterPid, Terminated, RumorMsg, FailConfig) ->
     receive
@@ -37,7 +31,12 @@ gossip_loop(Id, Topology, NumNodes, Neighbors, RumorCount, MasterPid, Terminated
                     send_rumor_to_neighbor(Id, Topology, NumNodes, Neighbors, Msg, FailConfig),
                     erlang:send_after(10, self(), gossip_tick);
                 _ ->
-                    ok
+                    %% Each receipt causes another asynchronous gossip step,
+                    %% until this actor reaches its termination threshold.
+                    case NewCount < 10 of
+                        true -> send_rumor_to_neighbor(Id, Topology, NumNodes, Neighbors, Msg, FailConfig);
+                        false -> ok
+                    end
             end,
 
             NewTerminated =
@@ -75,9 +74,13 @@ send_rumor_to_neighbor(Id, Topology, NumNodes, Neighbors, Msg, FailConfig) ->
             NeighborId = topology:pick_random_neighbor(Topology, Id, NumNodes, Neighbors),
             case NeighborId =/= Id of
                 true ->
-                    Workers = persistent_term:get(workers),
-                    NeighborPid = element(NeighborId, Workers),
-                    NeighborPid ! {rumor, Msg};
+                    try persistent_term:get(workers) of
+                        Workers ->
+                            NeighborPid = element(NeighborId, Workers),
+                            NeighborPid ! {rumor, Msg}
+                    catch
+                        _:_ -> ok
+                    end;
                 false ->
                     ok
             end
@@ -93,7 +96,7 @@ start_push_sum(Id, Topology, NumNodes, MasterPid, FailConfig) ->
         if
             IsCrashed ->
                 MasterPid ! {node_failed, Id},
-                crashed_loop();
+                exit(crashed);
             true ->
                 receive
                     {init_neighbors, Neighbors} ->
@@ -125,20 +128,29 @@ push_sum_loop(Id, Topology, NumNodes, Neighbors, S, W, Streak, MasterPid, Termin
                     true -> 0
                 end,
 
-            NewTerminated =
-                if
-                    NewStreak >= 3 andalso (not Terminated) ->
-                        MasterPid ! {node_terminated, Id, NewRatio},
-                        true;
-                    true ->
-                        Terminated
-                end,
+            if
+                NewStreak >= 3 ->
+                    MasterPid ! {node_terminated, Id, NewRatio},
+                    S_send = NewS / 2.0,
+                    W_send = NewW / 2.0,
+                    send_push_sum(Id, Topology, NumNodes, Neighbors, S_send, W_send, FailConfig),
+                    push_sum_terminated_loop(Id, Topology, NumNodes, Neighbors, FailConfig);
+                true ->
+                    S_send = NewS / 2.0,
+                    W_send = NewW / 2.0,
+                    send_push_sum(Id, Topology, NumNodes, Neighbors, S_send, W_send, FailConfig),
+                    push_sum_loop(Id, Topology, NumNodes, Neighbors, S_send, W_send, NewStreak, MasterPid, false, FailConfig)
+            end;
 
-            S_send = NewS / 2.0,
-            W_send = NewW / 2.0,
-            send_push_sum(Id, Topology, NumNodes, Neighbors, S_send, W_send, FailConfig),
-            push_sum_loop(Id, Topology, NumNodes, Neighbors, S_send, W_send, NewStreak, MasterPid, NewTerminated, FailConfig);
+        stop ->
+            exit(normal)
+    end.
 
+push_sum_terminated_loop(Id, Topology, NumNodes, Neighbors, FailConfig) ->
+    receive
+        {push_sum, InS, InW} ->
+            send_push_sum(Id, Topology, NumNodes, Neighbors, InS, InW, FailConfig),
+            push_sum_terminated_loop(Id, Topology, NumNodes, Neighbors, FailConfig);
         stop ->
             exit(normal)
     end.
@@ -153,11 +165,14 @@ send_push_sum(Id, Topology, NumNodes, Neighbors, S, W, FailConfig) ->
             NeighborId = topology:pick_random_neighbor(Topology, Id, NumNodes, Neighbors),
             case NeighborId =/= Id of
                 true ->
-                    Workers = persistent_term:get(workers),
-                    NeighborPid = element(NeighborId, Workers),
-                    NeighborPid ! {push_sum, S, W};
+                    try persistent_term:get(workers) of
+                        Workers ->
+                            NeighborPid = element(NeighborId, Workers),
+                            NeighborPid ! {push_sum, S, W}
+                    catch
+                        _:_ -> ok
+                    end;
                 false ->
                     ok
             end
     end.
-
