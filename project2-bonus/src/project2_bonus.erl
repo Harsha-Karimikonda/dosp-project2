@@ -1,8 +1,5 @@
 -module(project2_bonus).
--export([main/1, run/1, run/5, measure_running_time/1]).
-
-run(Args) when is_list(Args) ->
-    main(Args).
+-export([main/1, measure_running_time/1]).
 
 
 main(Args) ->

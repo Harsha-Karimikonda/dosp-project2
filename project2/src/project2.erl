@@ -1,8 +1,5 @@
 -module(project2).
--export([main/1, run/1, run/3, measure_running_time/1]).
-
-run(Args) when is_list(Args) ->
-    main(Args).
+-export([main/1, measure_running_time/1]).
 
 
 %% Command-line entry point

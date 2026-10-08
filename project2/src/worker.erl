@@ -81,18 +81,18 @@ start_push_sum(Id, Topology, NumNodes, MasterPid) ->
                 %% Initial state: s = i, w = 1
                 S = float(Id),
                 W = 1.0,
-                push_sum_loop(Id, Topology, NumNodes, Neighbors, S, W, 0, MasterPid, false)
+                push_sum_loop(Id, Topology, NumNodes, Neighbors, S, W, 0, MasterPid)
         end
     end).
 
-push_sum_loop(Id, Topology, NumNodes, Neighbors, S, W, Streak, MasterPid, Terminated) ->
+push_sum_loop(Id, Topology, NumNodes, Neighbors, S, W, Streak, MasterPid) ->
     receive
         start ->
             %% Divide s and w in half, send to a random neighbor
             S_half = S / 2.0,
             W_half = W / 2.0,
             send_push_sum(Id, Topology, NumNodes, Neighbors, S_half, W_half),
-            push_sum_loop(Id, Topology, NumNodes, Neighbors, S_half, W_half, Streak, MasterPid, Terminated);
+            push_sum_loop(Id, Topology, NumNodes, Neighbors, S_half, W_half, Streak, MasterPid);
 
         {push_sum, InS, InW} ->
             OldRatio = S / W,
@@ -118,7 +118,7 @@ push_sum_loop(Id, Topology, NumNodes, Neighbors, S, W, Streak, MasterPid, Termin
                     S_send = NewS / 2.0,
                     W_send = NewW / 2.0,
                     send_push_sum(Id, Topology, NumNodes, Neighbors, S_send, W_send),
-                    push_sum_loop(Id, Topology, NumNodes, Neighbors, S_send, W_send, NewStreak, MasterPid, false)
+                    push_sum_loop(Id, Topology, NumNodes, Neighbors, S_send, W_send, NewStreak, MasterPid)
             end;
 
         stop ->

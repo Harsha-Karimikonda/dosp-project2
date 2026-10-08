@@ -65,11 +65,9 @@ pick_random_neighbor(full, Id, NumNodes, _Neighbors) ->
             R = rand:uniform(NumNodes - 1),
             if R >= Id -> R + 1; true -> R end
     end;
-pick_random_neighbor("full", Id, NumNodes, Neighbors) ->
-    pick_random_neighbor(full, Id, NumNodes, Neighbors);
-pick_random_neighbor(_Topology, _Id, _NumNodes, Neighbors) ->
+pick_random_neighbor(_Topology, Id, _NumNodes, Neighbors) ->
     case Neighbors of
-        [] -> self();
+        [] -> Id;
         [Single] -> Single;
         _ ->
             Index = rand:uniform(length(Neighbors)),

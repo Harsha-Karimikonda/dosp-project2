@@ -102,18 +102,18 @@ start_push_sum(Id, Topology, NumNodes, MasterPid, FailConfig) ->
                     {init_neighbors, Neighbors} ->
                         S = float(Id),
                         W = 1.0,
-                        push_sum_loop(Id, Topology, NumNodes, Neighbors, S, W, 0, MasterPid, false, FailConfig)
+                        push_sum_loop(Id, Topology, NumNodes, Neighbors, S, W, 0, MasterPid, FailConfig)
                 end
         end
     end).
 
-push_sum_loop(Id, Topology, NumNodes, Neighbors, S, W, Streak, MasterPid, Terminated, FailConfig) ->
+push_sum_loop(Id, Topology, NumNodes, Neighbors, S, W, Streak, MasterPid, FailConfig) ->
     receive
         start ->
             S_half = S / 2.0,
             W_half = W / 2.0,
             send_push_sum(Id, Topology, NumNodes, Neighbors, S_half, W_half, FailConfig),
-            push_sum_loop(Id, Topology, NumNodes, Neighbors, S_half, W_half, Streak, MasterPid, Terminated, FailConfig);
+            push_sum_loop(Id, Topology, NumNodes, Neighbors, S_half, W_half, Streak, MasterPid, FailConfig);
 
         {push_sum, InS, InW} ->
             OldRatio = S / W,
@@ -139,7 +139,7 @@ push_sum_loop(Id, Topology, NumNodes, Neighbors, S, W, Streak, MasterPid, Termin
                     S_send = NewS / 2.0,
                     W_send = NewW / 2.0,
                     send_push_sum(Id, Topology, NumNodes, Neighbors, S_send, W_send, FailConfig),
-                    push_sum_loop(Id, Topology, NumNodes, Neighbors, S_send, W_send, NewStreak, MasterPid, false, FailConfig)
+                    push_sum_loop(Id, Topology, NumNodes, Neighbors, S_send, W_send, NewStreak, MasterPid, FailConfig)
             end;
 
         stop ->
